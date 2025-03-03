@@ -9,3 +9,4 @@ add_subdirectory("tools")
 
 if(BUILD_TESTING)
     add_subdirectory("test")
+endif()
