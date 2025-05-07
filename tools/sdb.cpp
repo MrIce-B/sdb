@@ -1,6 +1,103 @@
-#include <libsdb/libsdb.hpp>
+// ************************* Launching and Attaching to Process **********************************************
 
-int main() {
-    sdb::say_hello();
+// #include <iostream>
+// #include <unistd.h>
+// #include <sys/ptrace.h>
+// #include <string_view>
+// #include <sys/types.h>
+// #include <sys/wait.h>
+// namespace  {
+//     pid_t attach(int argc,const char** argv){
+//         pid_t pid=0;
+//         // Passing PID
+//         // 如果用户通过 `-p` 参数指定 PID，附加到该进程
+// 		if(argc == 3 && argv[1]==std::string_view("-p")){  /*mark1*/
+//             pid ==std::atoi(argv[2]);
+//             if(pid == 0){
+//                 std::cerr << "Invalid PID\n";
+//                 return -1;
+//             }
+// 		    if(ptrace(PTRACE_ATTACH,pid,/*addr=*/nullptr,/*data=*/nullptr)  < 0){/*mark2*/
+//                 std::perror("Could not attach to process");
+//                 return -1;
+//             }
+//         }
+//         // Passing Process
+//         // 如果用户未指定 `-p` 参数，启动一个新的子进程并对其进行跟踪。
+//         else{
+//             const char* program_path = argv[1];
+//             if((pid=fork())<0){ /*mark3*/
+//                 std::cerr << "Fork failed\n";
+//                 return -1;
+//             }
+
+//             if(pid==0){
+//                 // we're in the child process
+//                 // Execute debugger
+//                 if(ptrace(PTRACE_TRACEME,0,/*addr=*/nullptr,/*data=*/nullptr) < 0){ /*mark4*/
+//                     std::perror("Tracing failed");
+//                     return -1;
+//                 }
+//                 if(execlp(program_path, program_path, nullptr) < 0){/*mark5*/
+//                     std::perror("Exec failed");
+//                     return -1;
+//                 }
+//             }
+//         }
+//         return pid;
+//     }
+// }
+
+// int main(int argc, const char** argv) {
+//     if (argc == 1) {
+//         std::cerr <<" No arguments given\n"; 
+//         return -1;
+//     } 
+
+//     pid_t pid = attach(argc, argv);
+
+//     int wait_status;
+//     int options = 0;
+//     if(waitpid(pid,&wait_status,options) < 0){ /*mark6*/
+//         std::perror("Waitpid failed");
+//         return -1;
+//     }
+//     return 0;
+// } 
+
+// ************************ Launching and Attaching to Process *********************************
+
+
+// ************************* Adding a User Interface ***********************************************
+#include <editline/readline.h>
+#include <string>
+#include <iostream>
+#include <unistd.h>
+namespace {
+    void handle_command(pid_t pid, std::string_view line);
+}
+
+int main(int argc, const char** argv) {
+    if (argc == 1) {
+        std::cerr << "No arguments given\n"; 
+        return -1;
+    } 
+    char *line = nullptr;
+    while ((line = readline("sdb> ")) != nullptr) {
+        // Check if the line is empty
+        if (line[0] == '\0') {
+            free(line);
+            continue;
+        }
+        
+        // Handle the command
+        handle_command(pid, line);
+        add_history(line);
+        // Free the line memory
+        free(line);
+    }
+    
     return 0;
 }
+
+// ************************* Adding a User Interface ***********************************************
