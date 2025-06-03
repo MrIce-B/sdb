@@ -69,12 +69,99 @@
 
 
 // ************************* Adding a User Interface ***********************************************
-#include <editline/readline.h>
-#include <string>
 #include <iostream>
 #include <unistd.h>
+#include <sys/ptrace.h>
+#include <string_view>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <editline/readline.h>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <algorithm>
 namespace {
-    void handle_command(pid_t pid, std::string_view line);
+    pid_t attach(int argc,const char** argv){
+        pid_t pid=0;
+        // Passing PID
+        // 如果用户通过 `-p` 参数指定 PID，附加到该进程
+		if(argc == 3 && argv[1]==std::string_view("-p")){  /*mark1*/
+            pid =std::atoi(argv[2]);
+            if(pid == 0){
+                std::cerr << "Invalid PID\n";
+                return -1;
+            }
+		    if(ptrace(PTRACE_ATTACH,pid,/*addr=*/nullptr,/*data=*/nullptr)  < 0){/*mark2*/
+                std::perror("Could not attach to process");
+                return -1;
+            }
+        }
+        // Passing Process
+        // 如果用户未指定 `-p` 参数，启动一个新的子进程并对其进行跟踪。
+        else{
+            const char* program_path = argv[1];
+            if((pid=fork())<0){ /*mark3*/
+                std::cerr << "Fork failed\n";
+                return -1;
+            }
+
+            if(pid==0){
+                // we're in the child process
+                // Execute debugger
+                if(ptrace(PTRACE_TRACEME,0,/*addr=*/nullptr,/*data=*/nullptr) < 0){ /*mark4*/
+                    std::perror("Tracing failed");
+                    return -1;
+                }
+                if(execlp(program_path, program_path, nullptr) < 0){/*mark5*/
+                    std::perror("Exec failed");
+                    return -1;
+                }
+            }
+        }
+        return pid;
+    }
+    std::vector<std::string> split(std::string_view str,char delimiter){
+        std::vector<std::string> out{};
+        std::stringstream ss {std::string(str)};
+        std::string item;
+        while(std::getline(ss,item,delimiter)){
+            if(!item.empty()){   // this judge null is necessary ??
+                out.push_back(item);
+            }
+        }
+        return out;
+    }
+    bool is_prefix(std::string_view str,std::string_view of){
+        if (str.size()>of.size()) {
+            return false;
+        }
+        return std::equal(str.begin(),str.end(),of.begin());
+    }
+    void resume(pid_t pid){
+        if(ptrace(PTRACE_CONT,pid,nullptr,nullptr)<0) {
+            std::cerr << "Could not continue"<<std::endl;
+            std::exit(-1);
+        }
+    }
+    void wait_on_signal(pid_t pid){
+        int wait_status;
+        int options = 0;
+        if (waitpid(pid,&wait_status,options) < 0) {
+            std::perror("Waitpid failed");
+            std::exit(-1);
+        }
+    }
+    void handle_command(pid_t pid, std::string_view line) {
+        auto args = split(line, ' ');
+        auto command = args[0];
+
+        if (is_prefix(command,"continue")) {
+            resume(pid);
+            wait_on_signal(pid);
+        } else {
+            std::cerr << "Unknown command: " << command << "\n";
+        }
+    }
 }
 
 int main(int argc, const char** argv) {
@@ -82,19 +169,24 @@ int main(int argc, const char** argv) {
         std::cerr << "No arguments given\n"; 
         return -1;
     } 
+    pid_t pid = attach(argc, argv);
     char *line = nullptr;
     while ((line = readline("sdb> ")) != nullptr) {
-        // Check if the line is empty
-        if (line[0] == '\0') {
+        std::string line_str;
+        if (line == std::string_view("")) {
             free(line);
-            continue;
+            if (history_length > 0) {
+                line_str = history_list()[history_length - 1]->line; 
+            }
+        } else {
+            line_str = line;
+            add_history(line);
+            free(line);
         }
-        
-        // Handle the command
-        handle_command(pid, line);
-        add_history(line);
-        // Free the line memory
-        free(line);
+
+        if (!line_str.empty()) {
+            handle_command(pid,line_str);
+        }
     }
     
     return 0;
