@@ -1,0 +1,60 @@
+{
+      // See https://go.microsoft.com/fwlink/?LinkId=733558
+      // for the documentation about the tasks.json format
+      "version": "2.0.0",
+      "tasks": [
+          {
+            "label": "clean",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+              "-rf",
+              "${workspaceFolder}/build"
+            ],
+            "options": {
+              "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+          },
+          {
+            "label": "cmake",
+            "type": "shell",
+            "command": "cmake",
+            "args": [ // 这里放cmake 编译的参数（大部分可以写到里面）
+              "-B",
+              "${workspaceFolder}/build",
+              "-S",
+              "${workspaceFolder}",
+              "-DCMAKE_CXX_COMPILER=g++",
+              "-DCMAKE_CXX_STANDARD=17",
+              "-DCMAKE_TOOLCHAIN_FILE=/home/wwd/code/vcpkg/scripts/buildsystems/vcpkg.cmake"              
+            ],
+            "options": {
+              "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+          },
+          {
+            "label": "make",
+            "type": "shell",
+            "group": {
+              "kind": "build",
+              "isDefault": true
+            },
+            "command": "make", // Linux 环境下使用 make
+            "args": [
+              "-C",
+              "${workspaceFolder}/build"
+            ]
+          },
+          {
+            "label": "Build",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+              "clean",
+              "cmake",
+              "make"
+            ]
+          }
+      ]
+}
