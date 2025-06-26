@@ -1,4 +1,4 @@
-add_library(libsdb libsdb.cpp)         # 使用单个源文件libsdb.cpp 创建一个名为libsdb的目标
+add_library(libsdb Process.cpp)         # 使用单个源文件libsdb.cpp 创建一个名为libsdb的目标
 add_library(sdb::libsdb ALIAS libsdb)  # 创建一个别名，ALIAS是一个关键字，表示接下来定义的是一个别名
 
 set_target_properties(      #用于设置target 的属性，将编译后的默认的库名 liblibsdb. a ==> libsdb. a
