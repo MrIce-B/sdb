@@ -7,7 +7,7 @@
 
 std::unique_ptr<sdb::Process> sdb::Process::launch(std::filesystem::path path){
     pid_t pid ;
-    if(pid = fork()<0) {
+    if((pid = fork())<0) {
         Error::send_errno("fork failed");
     } 
 
