@@ -1,5 +1,5 @@
-#ifndef ERROR_HPP 
-#define ERROR_HPP
+#ifndef SDB_ERROR_HPP 
+#define SDB_ERROR_HPP
 
 #include <stdexcept>
 #include <cstring>
@@ -19,4 +19,4 @@ namespace sdb{
     };
 }
 
-#endif // ERROR_HPP
+#endif // SDB_ERROR_HPP

@@ -1,5 +1,5 @@
-#ifndef PROCESS_HPP
-#define PROCESS_HPP
+#ifndef SDB_PROCESS_HPP
+#define SDB_PROCESS_HPP
 
 #include <filesystem>
 #include <memory>
@@ -51,4 +51,4 @@ namespace sdb {
 }
 
 
-#endif // PROCESS_HPP
+#endif // SDB_PROCESS_HPP
