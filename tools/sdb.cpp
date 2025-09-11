@@ -222,6 +222,7 @@ namespace {
             return sdb::Process::launch(std::filesystem::path(program_path));
         }
     }
+    
     std::vector<std::string> split(std::string_view str,char delimiter){
         std::vector<std::string> out{};
         std::stringstream ss {std::string(str)};
@@ -233,12 +234,14 @@ namespace {
         }
         return out;
     }
+
     bool is_prefix(std::string_view str,std::string_view of){
         if (str.size()>of.size()) {
             return false;
         }
         return std::equal(str.begin(),str.end(),of.begin());
-    }   
+    }  
+
     void print_stop_reason(const sdb::Process& process, sdb::stop_reason reason ) {
         std::cout << "Process " << process.pid() << ' ';
         switch (reason.reason)
@@ -257,6 +260,7 @@ namespace {
         }
         std::cout << std::endl;
     }
+
     void handle_command(std::unique_ptr<sdb::Process>& process, std::string_view line) {
         auto args = split(line, ' ');
         auto command = args[0];
@@ -268,6 +272,7 @@ namespace {
             std::cerr<< "Unknown command: " << command << "\n";
         }
     }
+
     void main_loop(std::unique_ptr<sdb::Process>& process) {
         char* line = nullptr;
         while((line = readline("sdb> ")) != nullptr) {

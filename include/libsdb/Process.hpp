@@ -30,7 +30,7 @@ namespace sdb {
             Process& operator=(const Process&) = delete;
             ~Process();
 
-            static std::unique_ptr<Process> launch(std::filesystem::path path);
+            static std::unique_ptr<Process> launch(std::filesystem::path path, bool debug = true);
             static std::unique_ptr<Process> attach(pid_t pid);
 
             void resume();
@@ -41,11 +41,12 @@ namespace sdb {
         
         private: 
             // 将构造函数设为私有，以便客户端代码必须使用 static launch 或 attach 方法来创建 Process 对象
-            Process(pid_t pid, bool terminate_on_end ):pid_(pid), terminate_on_end_(terminate_on_end) {}
+            Process(pid_t pid, bool terminate_on_end, bool is_attached ):pid_(pid), terminate_on_end_(terminate_on_end),is_attached_(is_attached) {}
 
         private: 
             pid_t pid_;
             bool terminate_on_end_ = true;
+            bool is_attached_ = true;
             Process_State state_ = Process_State::stopped;
     };
 }
